@@ -400,7 +400,7 @@ st.markdown(f"""
 st.markdown("## 🤖 AI Generated Recommendations")
 
 try:
-    latest_prediction = future_forecast["yhat"].iloc[-1]
+    latest_prediction = forecast["yhat"].iloc[-1]
 
     recommendation_prompt = f"""
     You are a senior business analyst.
