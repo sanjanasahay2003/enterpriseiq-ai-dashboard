@@ -323,6 +323,61 @@ with col4:
     <p style='color:#4ade80;'>⬆ +4.3%</p>
     </div>
     """, unsafe_allow_html=True)
+    
+    # ================= 7 DAYS SALES FORECAST =================
+
+st.markdown("## 📈 AI Sales Forecast (Next 7 Days)")
+
+from prophet import Prophet
+import matplotlib.pyplot as plt
+
+forecast_df = filtered_df.copy()
+
+# Convert date column
+forecast_df["Date"] = pd.to_datetime(forecast_df["Date"])
+
+# Daily sales aggregation
+daily_sales = forecast_df.groupby("Date")["Amount"].sum().reset_index()
+
+# Prophet format
+daily_sales.columns = ["ds", "y"]
+
+# Train model
+model = Prophet()
+
+model.fit(daily_sales)
+
+# Predict next 7 days
+future = model.make_future_dataframe(periods=7)
+
+forecast = model.predict(future)
+
+# Forecast chart
+fig1 = model.plot(forecast)
+
+st.pyplot(fig1)
+
+# Future predictions
+future_sales = forecast[["ds", "yhat"]].tail(7)
+
+# Show table
+st.markdown("### 🔮 Predicted Sales For Next 7 Days")
+
+st.dataframe(
+    future_sales.rename(
+        columns={
+            "ds": "Date",
+            "yhat": "Predicted Sales"
+        }
+    )
+)
+
+# Total forecast
+predicted_revenue = future_sales["yhat"].sum()
+
+st.success(
+    f"📊 Expected Revenue Next 7 Days: ₹{predicted_revenue:,.0f}"
+)
 
 # ========================= AI INSIGHTS =========================
 st.markdown("# 🧠 AI Generated Business Insights")
