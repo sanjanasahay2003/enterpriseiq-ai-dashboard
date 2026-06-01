@@ -395,6 +395,51 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+# ================= LLM RECOMMENDATIONS =================
+
+st.markdown("## 🤖 AI Generated Recommendations")
+
+try:
+    latest_prediction = future_forecast["yhat"].iloc[-1]
+
+    recommendation_prompt = f"""
+    You are a senior business analyst.
+
+    Analyze this ecommerce business data and provide 5 smart business recommendations.
+
+    Data:
+    - Total Sales: {total_sales}
+    - Total Orders: {total_orders}
+    - Average Order Value: {avg_order}
+    - Top Category: {top_category}
+    - Forecasted Sales Next Week: {latest_prediction}
+
+    Give concise actionable recommendations.
+    """
+
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+    recommendation_response = client.chat.completions.create(
+        model="llama3-70b-8192",
+        messages=[
+            {
+                "role": "user",
+                "content": recommendation_prompt
+            }
+        ]
+    )
+
+    ai_recommendation = recommendation_response.choices[0].message.content
+
+    st.markdown(f"""
+    <div class='green-box'>
+    {ai_recommendation}
+    </div>
+    """, unsafe_allow_html=True)
+
+except Exception as e:
+    st.error(f"AI recommendation error: {e}")
+
 # ========================= ANOMALY DETECTION =========================
 st.markdown("# 🚨 AI Anomaly Detection")
 
