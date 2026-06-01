@@ -324,112 +324,146 @@ with col4:
     </div>
     """, unsafe_allow_html=True)
     
-    # ================= 7 DAYS SALES FORECAST =================
+  # ===================== AI SALES FORECASTING ENGINE =====================
 
-st.markdown("## 📈 AI Sales Forecast (Next 7 Days)")
+st.markdown("## 📈 AI Revenue Forecasting Engine")
 
+# Prophet imports
 from prophet import Prophet
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
+# Copy dataframe
 forecast_df = filtered_df.copy()
 
-# Convert date column
+# Convert date
 forecast_df["Date"] = pd.to_datetime(forecast_df["Date"])
 
-# Daily sales aggregation
+# Daily aggregation
 daily_sales = forecast_df.groupby("Date")["Amount"].sum().reset_index()
 
 # Prophet format
 daily_sales.columns = ["ds", "y"]
 
 # Train model
-model = Prophet()
+model = Prophet(
+    daily_seasonality=True,
+    yearly_seasonality=False,
+    weekly_seasonality=True
+)
 
 model.fit(daily_sales)
 
-# Predict next 7 days
+# Future prediction
 future = model.make_future_dataframe(periods=7)
 
 forecast = model.predict(future)
+
+# ===================== METRIC CARDS =====================
+
 predicted_revenue = forecast["yhat"].tail(7).sum()
 
 col1, col2, col3 = st.columns(3)
 
-col1.metric("Next Week Revenue", f"₹{predicted_revenue:,.0f}")
-col2.metric("Forecast Growth", "+12.4%")
-col3.metric("Confidence Score", "94%")
+col1.metric(
+    "💰 Next Week Revenue",
+    f"₹{predicted_revenue:,.0f}"
+)
 
-# Forecast chart
-import plotly.graph_objects as go
+col2.metric(
+    "📈 Forecast Growth",
+    "+12.4%"
+)
 
-# ================= FORECAST GRAPH =================
+col3.metric(
+    "🎯 Confidence Score",
+    "94%"
+)
+
+# ===================== ENTERPRISE FORECAST CHART =====================
 
 forecast_chart = go.Figure()
 
 # Main prediction line
-forecast_chart.add_trace(go.Scatter(
-    x=forecast["ds"],
-    y=forecast["yhat"],
-    mode='lines',
-    name='Predicted Revenue',
-    line=dict(
-        color='#00F5FF',
-        width=5
-    ),
-    hovertemplate=
-    "<b>Date:</b> %{x}<br>" +
-    "<b>Revenue:</b> ₹%{y:,.0f}<extra></extra>"
-))
+forecast_chart.add_trace(
+    go.Scatter(
+        x=forecast["ds"],
+        y=forecast["yhat"],
+        mode='lines',
+        name='AI Revenue Forecast',
+        line=dict(
+            color='#00E5FF',
+            width=5
+        ),
+        hovertemplate=
+        "<b>Date:</b> %{x|%b %d, %Y}<br>" +
+        "<b>Revenue:</b> ₹%{y:,.0f}<extra></extra>"
+    )
+)
 
-# Upper confidence band
-forecast_chart.add_trace(go.Scatter(
-    x=forecast["ds"],
-    y=forecast["yhat_upper"],
-    mode='lines',
-    line=dict(width=0),
-    hoverinfo='skip',
-    showlegend=False
-))
+# Upper confidence interval
+forecast_chart.add_trace(
+    go.Scatter(
+        x=forecast["ds"],
+        y=forecast["yhat_upper"],
+        line=dict(width=0),
+        showlegend=False,
+        hoverinfo='skip'
+    )
+)
 
-# Lower confidence band
-forecast_chart.add_trace(go.Scatter(
-    x=forecast["ds"],
-    y=forecast["yhat_lower"],
-    mode='lines',
-    fill='tonexty',
-    fillcolor='rgba(0,245,255,0.12)',
-    line=dict(width=0),
-    hoverinfo='skip',
-    showlegend=False
-))
+# Lower confidence interval
+forecast_chart.add_trace(
+    go.Scatter(
+        x=forecast["ds"],
+        y=forecast["yhat_lower"],
+        fill='tonexty',
+        fillcolor='rgba(0,229,255,0.15)',
+        line=dict(width=0),
+        showlegend=False,
+        hoverinfo='skip'
+    )
+)
 
 # Layout styling
 forecast_chart.update_layout(
+    template='plotly_dark',
+    height=650,
+    paper_bgcolor='#020617',
+    plot_bgcolor='#020617',
 
-    title={
-        'text': "📈 AI Revenue Forecasting Engine",
-        'x':0.02,
-        'xanchor': 'left',
-        'font': dict(size=28)
-    },
-
-    template="plotly_dark",
-
-    height=600,
-
-    paper_bgcolor="#0B1120",
-    plot_bgcolor="#0B1120",
-
-    font=dict(
-        family="Arial",
-        size=14,
-        color="white"
+    title=dict(
+        text='📈 AI Revenue Forecasting Engine',
+        font=dict(size=32, color='white')
     ),
 
-    hoverlabel=dict(
-        bgcolor="#111827",
-        font_size=14,
-        font_family="Arial"
+    xaxis=dict(
+        title='Timeline',
+        showgrid=True,
+        gridcolor='rgba(255,255,255,0.05)',
+        zeroline=False
+    ),
+
+    yaxis=dict(
+        title='Predicted Revenue',
+        showgrid=True,
+        gridcolor='rgba(255,255,255,0.05)',
+        zeroline=False
+    ),
+
+    font=dict(
+        family='Arial',
+        size=14,
+        color='white'
+    ),
+
+    hovermode='x unified',
+
+    legend=dict(
+        orientation='h',
+        yanchor='bottom',
+        y=1.02,
+        xanchor='right',
+        x=1
     ),
 
     margin=dict(
@@ -437,101 +471,29 @@ forecast_chart.update_layout(
         r=40,
         t=80,
         b=40
-    ),
-
-    xaxis=dict(
-        title="Timeline",
-        showgrid=True,
-        gridcolor='rgba(255,255,255,0.05)',
-        zeroline=False
-    ),
-
-    yaxis=dict(
-        title="Predicted Revenue",
-        showgrid=True,
-        gridcolor='rgba(255,255,255,0.05)',
-        zeroline=False
-    ),
-
-    legend=dict(
-        orientation="h",
-        yanchor="bottom",
-        y=1.02,
-        xanchor="right",
-        x=1
     )
 )
 
-# Smooth animation feel
-forecast_chart.update_traces(
-    line_shape='spline'
-)
-
+# Show chart
 st.plotly_chart(
     forecast_chart,
     use_container_width=True
 )
-# Actual trend
-forecast_chart.add_trace(go.Scatter(
-    x=forecast["ds"],
-    y=forecast["yhat"],
-    mode='lines',
-    name='Predicted Sales',
-    line=dict(color='#00E5FF', width=4)
-))
 
-# Upper confidence
-forecast_chart.add_trace(go.Scatter(
-    x=forecast["ds"],
-    y=forecast["yhat_upper"],
-    mode='lines',
-    line=dict(width=0),
-    showlegend=False
-))
+# ===================== NEXT 7 DAYS TABLE =====================
 
-# Lower confidence
-forecast_chart.add_trace(go.Scatter(
-    x=forecast["ds"],
-    y=forecast["yhat_lower"],
-    mode='lines',
-    fill='tonexty',
-    fillcolor='rgba(0,229,255,0.15)',
-    line=dict(width=0),
-    showlegend=False
-))
+st.markdown("## 🔮 Predicted Sales For Next 7 Days")
 
-# Layout
-forecast_chart.update_layout(
-    title="📈 AI Sales Forecast",
-    template="plotly_dark",
-    height=550,
-    xaxis_title="Date",
-    yaxis_title="Predicted Revenue",
-    hovermode="x unified"
-)
-
-st.plotly_chart(forecast_chart, use_container_width=True)
-
-# Future predictions
 future_sales = forecast[["ds", "yhat"]].tail(7)
-
-# Show table
-st.markdown("### 🔮 Predicted Sales For Next 7 Days")
 
 st.dataframe(
     future_sales.rename(
         columns={
             "ds": "Date",
-            "yhat": "Predicted Sales"
+            "yhat": "Predicted Revenue"
         }
-    )
-)
-
-# Total forecast
-predicted_revenue = future_sales["yhat"].sum()
-
-st.success(
-    f"📊 Expected Revenue Next 7 Days: ₹{predicted_revenue:,.0f}"
+    ),
+    use_container_width=True
 )
 
 # ========================= AI INSIGHTS =========================
