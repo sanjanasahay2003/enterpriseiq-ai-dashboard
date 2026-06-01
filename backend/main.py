@@ -351,6 +351,8 @@ model.fit(daily_sales)
 future = model.make_future_dataframe(periods=7)
 
 forecast = model.predict(future)
+predicted_revenue = forecast["yhat"].tail(7).sum()
+
 col1, col2, col3 = st.columns(3)
 
 col1.metric("Next Week Revenue", f"₹{predicted_revenue:,.0f}")
