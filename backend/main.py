@@ -362,9 +362,115 @@ col3.metric("Confidence Score", "94%")
 # Forecast chart
 import plotly.graph_objects as go
 
-# Forecast graph
+# ================= FORECAST GRAPH =================
+
 forecast_chart = go.Figure()
 
+# Main prediction line
+forecast_chart.add_trace(go.Scatter(
+    x=forecast["ds"],
+    y=forecast["yhat"],
+    mode='lines',
+    name='Predicted Revenue',
+    line=dict(
+        color='#00F5FF',
+        width=5
+    ),
+    hovertemplate=
+    "<b>Date:</b> %{x}<br>" +
+    "<b>Revenue:</b> ₹%{y:,.0f}<extra></extra>"
+))
+
+# Upper confidence band
+forecast_chart.add_trace(go.Scatter(
+    x=forecast["ds"],
+    y=forecast["yhat_upper"],
+    mode='lines',
+    line=dict(width=0),
+    hoverinfo='skip',
+    showlegend=False
+))
+
+# Lower confidence band
+forecast_chart.add_trace(go.Scatter(
+    x=forecast["ds"],
+    y=forecast["yhat_lower"],
+    mode='lines',
+    fill='tonexty',
+    fillcolor='rgba(0,245,255,0.12)',
+    line=dict(width=0),
+    hoverinfo='skip',
+    showlegend=False
+))
+
+# Layout styling
+forecast_chart.update_layout(
+
+    title={
+        'text': "📈 AI Revenue Forecasting Engine",
+        'x':0.02,
+        'xanchor': 'left',
+        'font': dict(size=28)
+    },
+
+    template="plotly_dark",
+
+    height=600,
+
+    paper_bgcolor="#0B1120",
+    plot_bgcolor="#0B1120",
+
+    font=dict(
+        family="Arial",
+        size=14,
+        color="white"
+    ),
+
+    hoverlabel=dict(
+        bgcolor="#111827",
+        font_size=14,
+        font_family="Arial"
+    ),
+
+    margin=dict(
+        l=40,
+        r=40,
+        t=80,
+        b=40
+    ),
+
+    xaxis=dict(
+        title="Timeline",
+        showgrid=True,
+        gridcolor='rgba(255,255,255,0.05)',
+        zeroline=False
+    ),
+
+    yaxis=dict(
+        title="Predicted Revenue",
+        showgrid=True,
+        gridcolor='rgba(255,255,255,0.05)',
+        zeroline=False
+    ),
+
+    legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+    )
+)
+
+# Smooth animation feel
+forecast_chart.update_traces(
+    line_shape='spline'
+)
+
+st.plotly_chart(
+    forecast_chart,
+    use_container_width=True
+)
 # Actual trend
 forecast_chart.add_trace(go.Scatter(
     x=forecast["ds"],
